@@ -96,4 +96,41 @@ export const tools: Tool[] = [
       };
     },
   },
+
+  // ─── 5. A free forecast tool that needs coordinates: the agent must chain get_city_info first ───
+  {
+    name: "get_forecast",
+    description:
+      "Get a 3-day weather forecast (daily max/min temperature in Celsius and chance of rain) for a location. Needs latitude and longitude: if you only have a city name, call get_city_info first to get the coordinates. Free, no payment needed.",
+    parameters: {
+      type: "object",
+      properties: {
+        latitude: { type: "number", description: "Latitude, e.g. 35.6895" },
+        longitude: { type: "number", description: "Longitude, e.g. 139.6917" },
+      },
+      required: ["latitude", "longitude"],
+    },
+    run: async ({ latitude, longitude }) => {
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`
+      );
+      if (!res.ok) {
+        return { error: "Forecast lookup failed.", status: res.status };
+      }
+      const data = await res.json();
+      const d = data?.daily;
+      if (!d?.time) {
+        return { error: "Unexpected forecast response.", details: data };
+      }
+      return {
+        timezone: data.timezone,
+        days: d.time.map((date: string, i: number) => ({
+          date,
+          maxC: d.temperature_2m_max[i],
+          minC: d.temperature_2m_min[i],
+          rainChancePercent: d.precipitation_probability_max[i],
+        })),
+      };
+    },
+  },
 ];
