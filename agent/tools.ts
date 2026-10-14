@@ -133,4 +133,21 @@ export const tools: Tool[] = [
       };
     },
   },
+
+  // ─── 6. Our own paid API (x402): travel tips, paid from the agent wallet ───
+  {
+    name: "get_city_tips",
+    description:
+      "Get the best season to visit a city and short travel tips for it. Costs 0.02 USDC, paid automatically from the agent's wallet via x402. Use when the user asks for travel tips, advice for visiting, or the best time to visit a city.",
+    parameters: {
+      type: "object",
+      properties: {
+        city: { type: "string", description: "City name in English, e.g. Istanbul" },
+      },
+      required: ["city"],
+    },
+    run: async ({ city }, { baseUrl }) => {
+      return payAndFetch(`${baseUrl}/api/city-tips?city=${encodeURIComponent(city)}`);
+    },
+  },
 ];
